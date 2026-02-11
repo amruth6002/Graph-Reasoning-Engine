@@ -1,10 +1,10 @@
 import os
-import sys
 # from langchain_openai import OpenAIEmbeddings
 from langchain_groq import ChatGroq
 import argparse
 import time
 from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
 from util import encode_pdf, retrieve_context_per_question, show_context
 
 load_dotenv()
@@ -41,7 +41,25 @@ class SimpleRAG:
             show_context(context)
 
             context_text = "\n\n".join(context)
-            prompt = f"Based on the following context, answer the question.\n\nContext:\n{context_text}\n\nQuestion: {query}\n\nAnswer:"
+            
+            query_rewrite_template = """You are an AI assistant tasked with reformulating user queries to improve retrieval in a RAG system. 
+            Given the original query, rewrite it to be more specific, detailed, and likely to retrieve relevant information.Dont give anything else except the rewritten query
+            Original query: {query}
+            Rewritten query:"""
+
+            query_rewrite_prompt = PromptTemplate(
+               input_variables=["query"],
+              template=query_rewrite_template
+               )
+            
+            query_rewriter = query_rewrite_prompt | self.llm
+
+            response=query_rewriter.invoke(query)
+
+            print(f"original query: {query}")
+            print(f"changed query :{response.content}")
+
+            prompt = f"Based on the following context, answer the question.\n\nContext:\n{context_text}\n\nQuestion: {response.content}\n\nAnswer:"
             response = self.llm.invoke(prompt)
             print(f"\nAnswer: {response.content}")
 
