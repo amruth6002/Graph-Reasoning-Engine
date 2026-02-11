@@ -9,50 +9,13 @@ from langchain_groq import ChatGroq
 import argparse
 import time
 from dotenv import load_dotenv
+from util import encode_pdf, retrieve_context_per_question, show_context
 
 load_dotenv()
 # os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY") 
 
-def replace_t_with_space(list_of_documents):
 
-    for doc in list_of_documents:
-        doc.page_content = doc.page_content.replace('\t',' ')
-    
-    return list_of_documents
-
-
-def encode_pdf(path, chunk_size=1000, chunk_overlap=200):
-    
-    loader = PyPDFLoader(path)
-    documents = loader.load()
-
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len
-    ) 
-
-    texts = text_splitter.split_documents(documents)
-    cleaned_texts = replace_t_with_space(texts)
-
-    # embeddings = OpenAIEmbeddings()
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vectorstore = FAISS.from_documents(cleaned_texts, embeddings)
-
-    return vectorstore
-
-def retrieve_context_per_question(question,chunks_query_retriever):
-    docs=chunks_query_retriever.invoke(question)
-
-    context=[doc.page_content for doc in docs]
-
-    return context
-
-def show_context(context):
-    
-    for i,c in enumerate(context):
-        print(f"context {i+1}")
-        print(c)
-        print("\n")
 
 
 class SimpleRAG:
@@ -68,7 +31,7 @@ class SimpleRAG:
             
             self.chunks_query_retriever =self.vector_store.as_retriever(search_kwargs={"k":n_retrieved})
             self.llm = ChatGroq(
-                model="llama-3.1-8b-instant",  # or "mixtral-8x7b-32768"
+                model="llama-3.1-8b-instant",
                 temperature=0
             )
         
@@ -83,7 +46,6 @@ class SimpleRAG:
 
             context_text = "\n\n".join(context)
             prompt = f"Based on the following context, answer the question.\n\nContext:\n{context_text}\n\nQuestion: {query}\n\nAnswer:"
-            
             response = self.llm.invoke(prompt)
             print(f"\nAnswer: {response.content}")
 
