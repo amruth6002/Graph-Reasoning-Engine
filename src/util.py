@@ -203,10 +203,12 @@ def expand_context_via_graph(knowledge_graph, seed_nodes, max_nodes=10):
     distances = {}
 
     # Seed the priority queue with reranked nodes
+    seed_set = set()
     for node_idx, score in seed_nodes:
         priority = 1 / score if score > 0 else float('inf')
         heapq.heappush(priority_queue, (priority, node_idx))
         distances[node_idx] = priority
+        seed_set.add(node_idx)
 
     print("\n  Graph traversal:")
 
@@ -226,7 +228,8 @@ def expand_context_via_graph(knowledge_graph, seed_nodes, max_nodes=10):
         node_concepts = graph.nodes[current_node].get('concepts', [])
         context_texts.append(node_content)
 
-        print(f"    Step {step} - Node {current_node}: {node_content[:60]}...")
+        origin = "SEED" if current_node in seed_set else "NEIGHBOUR"
+        print(f"    Step {step} - Node {current_node} [{origin}]: {node_content[:60]}...")
         print(f"      Concepts: {', '.join(node_concepts[:4])}")
 
         # Only expand to neighbors if this node brings new concepts

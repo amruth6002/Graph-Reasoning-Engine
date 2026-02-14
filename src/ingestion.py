@@ -2,8 +2,6 @@ import os
 import time
 import argparse
 from langchain_groq import ChatGroq
-import argparse
-import time
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from util import ( encode_pdf,  show_context , 
@@ -60,7 +58,7 @@ class GraphRAG:
             print(f"query rewriting time:{self.time_records['query rewrite']:.2f}s")
             
 
-            print("\n[2] vector retrieval (top {n_retrieved} from FAISS)")
+            print(f"\n[2] vector retrieval (top {self.n_retrieved} from FAISS)")
             start_time= time.time()
             retrieved_docs = self.chunks_query_retriever.invoke(changed_query)
             print(f"Retrieved {len(retrieved_docs)} chunks")
