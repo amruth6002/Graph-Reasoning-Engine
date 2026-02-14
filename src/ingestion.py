@@ -155,6 +155,12 @@ def parse_args():
 
 def main(args):
 
+    if args.rebuild:
+        import shutil
+        if os.path.exists("indexes"):
+            shutil.rmtree("indexes")
+            print("cleared persisted indexes. Rebuilding")
+
     simple_rag = GraphRAG(
         path=args.path,
         chunk_size=args.chunk_size,
