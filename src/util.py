@@ -19,12 +19,8 @@ def encode_pdf(path, chunk_size=1000, chunk_overlap=200):
     
     loader = PyPDFLoader(path)
     documents = loader.load()
-    # embeddings = OpenAIEmbeddings()
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-    # text_splitter = RecursiveCharacterTextSplitter(
-    #     chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len
-    # )
     text_splitter = SemanticChunker(
     embeddings, 
     breakpoint_threshold_type="percentile", 
@@ -42,12 +38,10 @@ def encode_pdf(path, chunk_size=1000, chunk_overlap=200):
 def retrieve_context_per_question(question, chunks_query_retriever, n_retrieved=2):
     docs = chunks_query_retriever.invoke(question)
     
-    # Rerank using cross-encoder
     reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
     query_doc_pairs = [(question, doc.page_content) for doc in docs]
     scores = reranker.predict(query_doc_pairs)
     
-    # Sort by score (higher is better) and take top n_retrieved
     ranked_docs = sorted(zip(docs, scores), key=lambda x: x[1], reverse=True)[:n_retrieved]
     context = [doc.page_content for doc, _ in ranked_docs]
     
